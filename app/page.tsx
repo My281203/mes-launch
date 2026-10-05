@@ -1,9 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, useInView, useMotionValueEvent, useScroll, useSpring } from 'framer-motion'
 import { ArrowDownRight, ArrowRight, ArrowUpRight, BarChart3, Boxes, Check, ChevronLeft, ChevronRight, CirclePlay, Factory, Layers3, Menu, Network, PackageCheck, Play, ScanLine, Settings2, Sparkles, X, Zap } from 'lucide-react'
-import { useRef } from 'react'
 
 const navItems = [['Overview', 'overview'], ['Features', 'features'], ["What's New", 'new'], ['Roadmap', 'roadmap'], ['Implementations', 'implementations'], ['About', 'about']]
 const stages = [
@@ -48,17 +47,82 @@ function SectionLabel({ children, dark = false }: { children: React.ReactNode; d
 
 function VideoPanel() { const [playing, setPlaying] = useState(false); return <div className="video-panel" onClick={() => setPlaying(!playing)} role="button" tabIndex={0} aria-label={playing ? 'Pause product demo' : 'Play product demo'}><div className="video-grid"/><div className="video-copy"><span>PRODUCT DEMO / 02:48</span><strong>{playing ? 'Product demo playing' : 'See how it all connects.'}</strong></div><div className="play-button">{playing ? <span className="pause-bars"/> : <Play fill="currentColor" size={20}/>}</div><div className="video-caption"><span>From factory floor</span><ArrowRight size={14}/><span>to operational intelligence</span></div></div> }
 
+let activeStorySection: string | null = null
+const storyListeners = new Set<() => void>()
+
+function useStoryAutoplay(id: string, count: number, selected: number, onSelect: (index: number) => void) {
+  const ref = useRef<HTMLElement>(null)
+  const [visible, setVisible] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [reducedMotion, setReducedMotion] = useState(false)
+  const manualUntil = useRef(0)
+
+  const claim = useCallback(() => {
+    if (activeStorySection !== id) {
+      activeStorySection = id
+      storyListeners.forEach((listener) => listener())
+    }
+  }, [id])
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const updateMotion = () => setReducedMotion(media.matches)
+    updateMotion()
+    media.addEventListener('change', updateMotion)
+    const observer = new IntersectionObserver(([entry]) => {
+      setVisible(entry.isIntersecting)
+      if (entry.isIntersecting) claim()
+      else if (activeStorySection === id) activeStorySection = null
+    }, { threshold: 0.25 })
+    if (ref.current) observer.observe(ref.current)
+    const rerender = () => setVisible((current) => current)
+    storyListeners.add(rerender)
+    return () => { observer.disconnect(); media.removeEventListener('change', updateMotion); storyListeners.delete(rerender); if (activeStorySection === id) activeStorySection = null }
+  }, [claim, id])
+
+  useEffect(() => {
+    if (!visible || reducedMotion || activeStorySection !== id) { setProgress(0); return }
+    let startedAt = performance.now()
+    let frame = 0
+    const delay = selected === 0 && manualUntil.current === 0 ? 700 : 3000
+    const duration = 3200
+    const tick = (now: number) => {
+      const elapsed = now - startedAt
+      setProgress(Math.min(100, (elapsed / duration) * 100))
+      if (elapsed >= duration + delay) {
+        onSelect((selected + 1) % count)
+        startedAt = now
+        setProgress(0)
+      }
+      frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    const visibility = () => { if (document.hidden) cancelAnimationFrame(frame) }
+    document.addEventListener('visibilitychange', visibility)
+    return () => { cancelAnimationFrame(frame); document.removeEventListener('visibilitychange', visibility) }
+  }, [count, id, onSelect, reducedMotion, selected, visible])
+
+  const select = (index: number) => { claim(); manualUntil.current = performance.now() + 3000; setProgress(0); onSelect(index) }
+  return { ref, progress, select, active: visible && activeStorySection === id }
+}
+
 export default function Page() {
-  const [activeStage, setActiveStage] = useState(2); const [activeFeature, setActiveFeature] = useState(0); const [release, setRelease] = useState(0); const [menu, setMenu] = useState(false); const { scrollY } = useScroll(); const [scrolled, setScrolled] = useState(false); useMotionValueEvent(scrollY, 'change', v => setScrolled(v > 36))
+  const [activeStage, setActiveStage] = useState(0); const [activeFeature, setActiveFeature] = useState(0); const [release, setRelease] = useState(0); const [menu, setMenu] = useState(false); const { scrollY } = useScroll(); const [scrolled, setScrolled] = useState(false); useMotionValueEvent(scrollY, 'change', v => setScrolled(v > 36))
+  const chooseStage = useCallback((index: number) => setActiveStage(index), [])
+  const chooseFeature = useCallback((index: number) => setActiveFeature(index), [])
+  const chooseRelease = useCallback((index: number) => setRelease(index), [])
+  const flowStory = useStoryAutoplay('flow', stages.length, activeStage, chooseStage)
+  const toolkitStory = useStoryAutoplay('toolkit', features.length, activeFeature, chooseFeature)
+  const releasesStory = useStoryAutoplay('releases', releases.length, release, chooseRelease)
   return <main className="site-shell">
     <header className={`navbar ${scrolled ? 'nav-scrolled' : ''}`}><a href="#overview" className="logo"><span className="logo-mark"><i/><i/><i/></span><span>MES<span className="logo-sub">SYSTEMS</span></span></a><nav>{navItems.map(([label, id]) => <a key={id} href={`#${id}`}>{label}</a>)}</nav><a href="#contact" className="nav-cta">Request a demo <ArrowUpRight size={16}/></a><button className="menu-btn" onClick={() => setMenu(!menu)} aria-label="Toggle menu">{menu ? <X/> : <Menu/>}</button>{menu && <div className="mobile-menu">{navItems.map(([label, id]) => <a onClick={() => setMenu(false)} key={id} href={`#${id}`}>{label}</a>)}<a href="#contact">Request a demo <ArrowRight size={16}/></a></div>}</header>
     <section id="overview" className="hero"><div className="hero-orbit orbit-one"/><div className="hero-orbit orbit-two"/><div className="hero-copy"><SectionLabel dark>THE OPERATING SYSTEM FOR MODERN MANUFACTURING</SectionLabel><h1>From production data to <span>production intelligence.</span></h1><p>One connected MES platform for smarter, faster, and more transparent manufacturing.</p><div className="hero-actions"><a className="btn btn-blue" href="#mes">Explore MES <ArrowRight size={17}/></a><a className="text-link light-link" href="#contact">Request a demo <ArrowUpRight size={16}/></a></div></div><div className="hero-visual"><div className="hero-core"><div className="core-ring"/><span>MES</span><small>CONNECTED<br/>OPERATIONS</small></div>{stages.slice(0, 6).map((stage, i) => <div key={stage.label} className={`flow-node node-${i}`}><stage.icon size={16}/><span>{stage.label}</span></div>)}<div className="flow-line line-a"/><div className="flow-line line-b"/><div className="hero-ui"><UiMockup compact/></div></div><a href="#mes" className="scroll-cue"><span className="scroll-line"/>Scroll to explore <ArrowDownRight size={15}/></a></section>
     <section id="mes" className="section intro"><div className="intro-copy"><SectionLabel>01 / THE PLATFORM</SectionLabel><Reveal><h2>Meet your <em>connected</em> operation.</h2><p>Connect people, processes, systems, and production data in one intelligent manufacturing ecosystem.</p><a className="text-link" href="#solution">Explore how it works <ArrowRight size={16}/></a></Reveal></div><div className="ecosystem"><div className="eco-core">MES<span>one source of truth</span></div>{['Production planning', 'Warehouse', 'Quality', 'Traceability', 'Analytics', 'SAP integration'].map((x, i) => <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 3 + i * .3, repeat: Infinity, delay: i * .2 }} className={`eco-node eco-${i}`} key={x}><span>{x}</span></motion.div>)}<div className="eco-lines"/></div></section>
     <section className="dark-section problem"><div className="problem-inner"><SectionLabel dark>02 / THE SHIFT</SectionLabel><Reveal><h2>Manufacturing is <em>complex.</em></h2><p className="lead-muted">The work is hard enough. Your systems should make it easier.</p></Reveal><div className="problem-list">{['Disconnected systems', 'Manual processes', 'Limited visibility', 'Delayed information', 'Data inconsistency', 'Difficult traceability'].map((x, i) => <Reveal key={x} delay={i * .07}><div><span>0{i + 1}</span>{x}<Check size={16}/></div></Reveal>)}</div><Reveal><div className="problem-transition">What if everything could <span>work as one?</span> <ArrowDownRight/></div></Reveal></div></section>
-    <section id="solution" className="section solution"><div className="section-head"><div><SectionLabel>03 / THE FLOW</SectionLabel><Reveal><h2>One MES. One <em>connected</em> operation.</h2></Reveal></div><p>From the first plan to the final shipment, every moment stays in sync.</p></div><div className="stage-layout"><div className="stage-list">{stages.map((s, i) => <button key={s.label} className={activeStage === i ? 'stage-active' : ''} onClick={() => setActiveStage(i)}><span>0{i + 1}</span><s.icon size={18}/><strong>{s.label}</strong><ArrowRight size={15}/></button>)}</div><div className="stage-detail"><div className="stage-number">0{activeStage + 1} / 06</div><motion.div key={activeStage} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}><h3>{stages[activeStage].title}</h3><p>{stages[activeStage].desc}</p><div className="stage-stat"><strong>{stages[activeStage].stat}</strong><span>{stages[activeStage].statLabel}</span></div></motion.div><div className="stage-visual"><div className="mini-signal"/><div className="mini-signal two"/><span>{stages[activeStage].label}</span><div className="mini-bars">{[38,62,48,82,66,90].map((h, i) => <i key={i} style={{height: `${h}%`}}/>)}</div></div></div></div></section>
-    <section id="features" className="dark-section features"><div className="section-head dark-head"><div><SectionLabel dark>04 / THE TOOLKIT</SectionLabel><Reveal><h2>Built for the <em>factory floor.</em></h2></Reveal></div><p>Powerful enough for the factory. Simple enough for everyone.</p></div><div className="feature-story"><div className="feature-tabs">{features.map((f, i) => <button key={f[0] as string} className={activeFeature === i ? 'feature-active' : ''} onClick={() => setActiveFeature(i)}><span>0{i + 1}</span>{f[0] as string}<ArrowRight size={15}/></button>)}</div><motion.div className="feature-copy" key={activeFeature} initial={{opacity:0, x:15}} animate={{opacity:1,x:0}}><SectionLabel dark>{features[activeFeature][2] as string}</SectionLabel><h3>{features[activeFeature][0] as string}</h3><p>{features[activeFeature][1] as string}</p><a className="text-link light-link" href="#contact">Explore capability <ArrowRight size={16}/></a></motion.div><div className="feature-ui"><UiMockup/></div></div></section>
+    <section id="solution" ref={flowStory.ref} className={`section solution ${flowStory.active ? 'story-active' : ''}`}><div className="section-head"><div><SectionLabel>03 / THE FLOW</SectionLabel><Reveal><h2>One MES. One <em>connected</em> operation.</h2></Reveal></div><p>From the first plan to the final shipment, every moment stays in sync.</p></div><div className="stage-layout"><div className="stage-list">{stages.map((s, i) => <button key={s.label} className={activeStage === i ? 'stage-active' : ''} onClick={() => flowStory.select(i)} aria-pressed={activeStage === i}><span>0{i + 1}</span><s.icon size={18}/><strong>{s.label}</strong><ArrowRight size={15}/>{activeStage === i && <i className="story-progress" style={{ '--progress': `${flowStory.progress}%` } as React.CSSProperties}/>}</button>)}</div><div className="stage-detail"><div className="stage-number">0{activeStage + 1} / 06</div><motion.div key={activeStage} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}><h3>{stages[activeStage].title}</h3><p>{stages[activeStage].desc}</p><div className="stage-stat"><strong>{stages[activeStage].stat}</strong><span>{stages[activeStage].statLabel}</span></div></motion.div><div className="stage-visual"><div className="mini-signal"/><div className="mini-signal two"/><span>{stages[activeStage].label}</span><div className="mini-bars">{[38,62,48,82,66,90].map((h, i) => <i key={i} style={{height: `${h}%`}}/>)}</div></div></div></div></section>
+    <section id="features" ref={toolkitStory.ref} className={`dark-section features ${toolkitStory.active ? 'story-active' : ''}`}><div className="section-head dark-head"><div><SectionLabel dark>04 / THE TOOLKIT</SectionLabel><Reveal><h2>Built for the <em>factory floor.</em></h2></Reveal></div><p>Powerful enough for the factory. Simple enough for everyone.</p></div><div className="feature-story"><div className="feature-tabs">{features.map((f, i) => <button key={f[0] as string} className={activeFeature === i ? 'feature-active' : ''} onClick={() => toolkitStory.select(i)} aria-pressed={activeFeature === i}><span>0{i + 1}</span>{f[0] as string}<ArrowRight size={15}/>{activeFeature === i && <i className="story-progress" style={{ '--progress': `${toolkitStory.progress}%` } as React.CSSProperties}/>}</button>)}</div><motion.div className="feature-copy" key={activeFeature} initial={{opacity:0, x:15}} animate={{opacity:1,x:0}}><SectionLabel dark>{features[activeFeature][2] as string}</SectionLabel><h3>{features[activeFeature][0] as string}</h3><p>{features[activeFeature][1] as string}</p><a className="text-link light-link" href="#contact">Explore capability <ArrowRight size={16}/></a></motion.div><div className="feature-ui"><UiMockup/></div></div></section>
     <section className="section demo"><div className="section-head"><div><SectionLabel>05 / PRODUCT DEMO</SectionLabel><Reveal><h2>See MES <em>in action.</em></h2></Reveal></div><p>One continuous thread from the factory floor to the decisions that move your business forward.</p></div><Reveal><VideoPanel/></Reveal></section>
-    <section id="new" className="section releases"><div className="section-head"><div><SectionLabel>06 / RELEASES</SectionLabel><Reveal><h2>What&apos;s <em>new.</em></h2></Reveal></div><p>Continuous improvements. Smarter workflows. Better manufacturing visibility.</p></div><div className="release-show"><div className={`release-art release-${release}`}><div className="release-grid"/><span>{releases[release].tag}</span><strong>{releases[release].title}</strong><div className="release-chart">{[35,52,42,78,58,92,71,84].map((h,i)=><i key={i} style={{height:`${h}%`}}/>)}</div></div><div className="release-info"><SectionLabel>{releases[release].tag}</SectionLabel><h3>{releases[release].title}</h3><p>{releases[release].copy}</p><a className="text-link" href="#contact">Explore release <ArrowRight size={16}/></a><div className="carousel-controls"><button onClick={() => setRelease((release + releases.length - 1) % releases.length)} aria-label="Previous release"><ChevronLeft/></button><span>0{release + 1} <i/> 0{releases.length}</span><button onClick={() => setRelease((release + 1) % releases.length)} aria-label="Next release"><ChevronRight/></button></div></div></div></section>
+    <section id="new" ref={releasesStory.ref} className={`section releases ${releasesStory.active ? 'story-active' : ''}`}><div className="section-head"><div><SectionLabel>06 / RELEASES</SectionLabel><Reveal><h2>What&apos;s <em>new.</em></h2></Reveal></div><p>Continuous improvements. Smarter workflows. Better manufacturing visibility.</p></div><div className="release-show"><div className={`release-art release-${release}`}><div className="release-grid"/><span>{releases[release].tag}</span><strong>{releases[release].title}</strong><div className="release-chart">{[35,52,42,78,58,92,71,84].map((h,i)=><i key={i} style={{height:`${h}%`}}/>)}</div></div><div className="release-info"><SectionLabel>{releases[release].tag}</SectionLabel><h3>{releases[release].title}</h3><p>{releases[release].copy}</p><a className="text-link" href="#contact">Explore release <ArrowRight size={16}/></a><div className="carousel-controls"><button onClick={() => releasesStory.select((release + releases.length - 1) % releases.length)} aria-label="Previous release"><ChevronLeft/></button><span>0{release + 1} <i/> 0{releases.length}</span><button onClick={() => releasesStory.select((release + 1) % releases.length)} aria-label="Next release"><ChevronRight/></button></div></div></div></section>
     <section id="roadmap" className="dark-section roadmap"><div className="roadmap-head"><SectionLabel dark>07 / THE HORIZON</SectionLabel><Reveal><h2>What&apos;s coming <em>next.</em></h2></Reveal><p>Our roadmap is a living commitment to better ways of working.</p></div><div className="timeline">{roadmap.map((r, i) => <Reveal key={r[1]} delay={i*.1}><div className="timeline-item"><div className="timeline-dot"/><span className="timeline-quarter">{r[0]}</span><small>{r[2]}</small><h3>{r[1]}</h3><p>{r[3]}</p></div></Reveal>)}</div><a className="text-link light-link roadmap-cta" href="#contact">Explore the roadmap <ArrowRight size={16}/></a></section>
     <section id="implementations" className="section implementations"><div className="section-head"><div><SectionLabel>08 / IN THE FIELD</SectionLabel><Reveal><h2>Explore MES in the <em>real world.</em></h2></Reveal></div><p>See how our platform is adapted to different manufacturing environments.</p></div><div className="case-grid">{implementations.map((item, i) => <Reveal key={item.name} delay={i*.1}><article className="case-card"><div className={`case-art bg-gradient-to-br ${item.accent}`}><Factory/><span>IMPLEMENTED / 0{i+1}</span><div className="case-lines"/></div><div className="case-info"><div><h3>{item.name}</h3><p>{item.industry} · {item.country}</p></div><ArrowUpRight size={16}/><span className="case-modules">{item.modules}</span><a href="#contact">Explore implementation <ArrowRight size={15}/></a></div></article></Reveal>)}</div></section>
     <section className="section impact"><SectionLabel>09 / THE IMPACT</SectionLabel><Reveal><h2>Built for <em>real operations.</em></h2></Reveal><div className="impact-grid">{[['XX+', 'Production lines'], ['XX+', 'Users'], ['XXM+', 'Production records'], ['XX+', 'MES modules'], ['XX%', 'Digitalized processes']].map(([n,l]) => <Reveal key={l}><div><strong>{n}</strong><span>{l}</span></div></Reveal>)}</div></section>

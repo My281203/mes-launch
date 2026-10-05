@@ -7,4 +7,9 @@
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
 @layer base{*{outline-color:#24a8ff}body{background:#f7f9fa}}
 .ui-mockup.compact .ui-body{min-height:180px}.ui-mockup.compact .ui-chart{height:74px}.ui-mockup.compact .bars{height:40px}
-.pause-bars{width:12px;height:16px;border-left:3px solid currentColor;border-right:3px solid currentColor;display:block}
+  .pause-bars{width:12px;height:16px;border-left:3px solid currentColor;border-right:3px solid currentColor;display:block}
+  .story-progress{position:absolute;left:0;bottom:0;height:2px;width:var(--progress,0%);background:currentColor;opacity:.8;transition:width .15s linear;pointer-events:none}
+  .stage-list button,.feature-tabs button{position:relative;overflow:hidden}
+  .story-active .stage-detail,.story-active .feature-copy,.story-active .release-art{will-change:transform,opacity}
+  @media(max-width:700px){.story-progress{height:3px}.stage-list button,.feature-tabs button{min-height:48px}}
+  @media(prefers-reduced-motion:reduce){.story-progress{transition:none}}
