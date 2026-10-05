@@ -41,13 +41,13 @@ const implementations = [
 ]
 
 const factoryMedia = {
-  hero: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1800&q=85',
-  plan: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=1400&q=85',
-  material: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1400&q=85',
-  production: 'https://images.unsplash.com/photo-1565043589221-1a6fd9ae45c7?auto=format&fit=crop&w=1400&q=85',
+  hero: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1800&q=85',
+  plan: 'https://images.unsplash.com/photo-1565610222536-ef125c59da2e?auto=format&fit=crop&w=1400&q=85',
+  material: 'https://images.unsplash.com/photo-1605518216938-7c31b7b14ad0?auto=format&fit=crop&w=1400&q=85',
+  production: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1400&q=85',
   quality: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1400&q=85',
-  packing: 'https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&w=1400&q=85',
-  warehouse: 'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=1400&q=85',
+  packing: 'https://images.unsplash.com/photo-1586528116493-da8b0b1a4b28?auto=format&fit=crop&w=1400&q=85',
+  warehouse: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1400&q=85',
   analytics: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1400&q=85',
 }
 
@@ -65,7 +65,30 @@ function UiMockup({ compact = false }: { compact?: boolean }) {
 
 function SectionLabel({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) { return <div className={`section-label ${dark ? 'dark-label' : ''}`}><span className="label-dot"/>{children}</div> }
 
-function VideoPanel() { const [playing, setPlaying] = useState(false); return <div className="video-panel" role="region" aria-label="MES product demo"><div className="video-media" style={{ backgroundImage: `url(${factoryMedia.hero})` }}>{playing ? <iframe src="https://www.youtube-nocookie.com/embed/Z0YatNniMas?autoplay=1&rel=0" title="MES product demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /> : <><div className="video-grid"/><button className="play-button" onClick={() => setPlaying(true)} aria-label="Play MES product demo"><Play fill="currentColor" size={20}/></button></>}</div><div className="video-copy"><span>PRODUCT DEMO / REAL FACTORY · REAL-TIME DATA</span><strong>{playing ? 'Product demo playing' : 'See how it all connects.'}</strong><p>See how MES connects production, quality, warehouse, and manufacturing operations in real time.</p></div><div className="video-caption"><span>From factory floor</span><ArrowRight size={14}/><span>to operational intelligence</span></div></div> }
+function VideoPanel() {
+  const [playing, setPlaying] = useState(false)
+  const [visible, setVisible] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      setVisible(entry.isIntersecting)
+      setPlaying(entry.isIntersecting)
+    }, { threshold: 0.35 })
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [])
+
+  const videoSrc = 'https://www.youtube-nocookie.com/embed/Z0YatNniMas?autoplay=1&mute=1&controls=0&loop=1&playlist=Z0YatNniMas&rel=0&modestbranding=1&playsinline=1'
+  return <div ref={ref} className="video-panel" role="region" aria-label="MES product demo">
+    <div className="video-media" style={{ backgroundImage: `url(${factoryMedia.hero})` }}>
+      {playing && visible ? <iframe src={videoSrc} title="MES product demo: connected garment manufacturing" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen /> : <><div className="video-grid"/><button className="play-button" onClick={() => setPlaying(true)} aria-label="Play MES product demo"><Play fill="currentColor" size={20}/></button></>}
+      <div className="video-overlay-copy"><span>REAL FACTORY</span><span>REAL-TIME DATA</span><span>ONE CONNECTED MES</span></div>
+      <div className="video-signal"><i/>LINE A <b>RUNNING</b><small>OUTPUT 1,184 PCS · EFFICIENCY 98.6%</small></div>
+    </div>
+    <div className="video-copy"><span>PRODUCT DEMO / REAL FACTORY · REAL-TIME DATA</span><strong>{playing ? 'The factory, connected.' : 'See how it all connects.'}</strong><p>See how MES connects production, quality, warehouse, and manufacturing operations in real time.</p></div><div className="video-caption"><span>From factory floor</span><ArrowRight size={14}/><span>to operational intelligence</span></div>
+  </div>
+}
 
 let activeStorySection: string | null = null
 const storyListeners = new Set<() => void>()
