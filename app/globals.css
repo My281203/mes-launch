@@ -13,3 +13,23 @@
   .story-active .stage-detail,.story-active .feature-copy,.story-active .release-art{will-change:transform,opacity}
   @media(max-width:700px){.story-progress{height:3px}.stage-list button,.feature-tabs button{min-height:48px}}
   @media(prefers-reduced-motion:reduce){.story-progress{transition:none}}
+
+/* Real factory media stays subordinate to the existing product UI. */
+.stage-visual,.feature-ui,.release-art,.case-art{background-position:center;background-size:cover;background-repeat:no-repeat;}
+.stage-visual{isolation:isolate;transition:background-image .8s ease,transform .8s cubic-bezier(.22,1,.36,1);}
+.stage-visual:after,.feature-ui:after,.release-art:after,.case-art:after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(11,15,20,.22),transparent 60%);mix-blend-mode:multiply;}
+.stage-visual > *, .feature-ui > *, .release-art > *, .case-art > *{position:relative;z-index:1;}
+.feature-ui,.release-art,.case-art{position:relative;overflow:hidden;}
+.feature-ui{background-position:center;}
+.release-art{background-color:#0b0f14;transition:background-image .8s ease,transform .8s cubic-bezier(.22,1,.36,1);}
+.case-art{min-height:260px;transition:transform .7s cubic-bezier(.22,1,.36,1);}
+.case-card:hover .case-art{transform:scale(1.025);}
+.video-panel{overflow:hidden;}
+.video-media{position:relative;aspect-ratio:16/9;min-height:420px;background-size:cover;background-position:center;overflow:hidden;}
+.video-media:before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(11,15,20,.78),rgba(11,15,20,.18) 65%,rgba(11,15,20,.5));}
+.video-media iframe{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:2;}
+.video-media .video-grid{position:absolute;inset:0;z-index:1;}
+.video-media .play-button{z-index:3;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);}
+.video-copy p{max-width:520px;color:rgba(255,255,255,.62);font-size:14px;line-height:1.7;margin:10px 0 0;}
+.demo-note{font-size:11px;color:var(--muted);letter-spacing:.04em;margin:14px 0 0;}
+@media(max-width:700px){.video-media{min-height:220px}.case-art{min-height:200px}.stage-visual{min-height:260px}}
