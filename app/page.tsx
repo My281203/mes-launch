@@ -84,8 +84,8 @@ function useStoryAutoplay(id: string, count: number, selected: number, onSelect:
     if (!visible || reducedMotion || activeStorySection !== id) { setProgress(0); return }
     let startedAt = performance.now()
     let frame = 0
-    const delay = selected === 0 && manualUntil.current === 0 ? 700 : 3000
-    const duration = 3200
+    const delay = selected === 0 && manualUntil.current === 0 ? 300 : 500
+    const duration = 1200
     const tick = (now: number) => {
       const elapsed = now - startedAt
       setProgress(Math.min(100, (elapsed / duration) * 100))
