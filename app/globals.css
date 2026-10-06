@@ -71,6 +71,43 @@
 
 /* Annotated composition refinements: keep the product story primary. */
 .hero-visual{min-height:520px}
+
+/* The flow uses the active factory image as the complete detail canvas; no separate visual card is needed. */
+.stage-detail{background-image:var(--stage-image);background-position:center;background-size:cover}
+.stage-detail:before{background:linear-gradient(90deg,rgba(11,15,20,.94) 0%,rgba(11,15,20,.74) 34%,rgba(11,15,20,.16) 76%,rgba(11,15,20,.34) 100%),linear-gradient(0deg,rgba(11,15,20,.7),transparent 62%)}
+.stage-detail:after{background:linear-gradient(105deg,rgba(141,232,255,.12),transparent 35%,transparent 72%,rgba(36,168,255,.08));mix-blend-mode:screen}
+.stage-detail .stage-content,.stage-detail .stage-number,.stage-detail .stage-signal{z-index:2}
+
+/* Let the contextual factory frame read clearly behind the compact operational signal. */
+.feature-ui:before{background:linear-gradient(90deg,rgba(11,15,20,.2),rgba(11,15,20,.03) 60%,rgba(11,15,20,.18));backdrop-filter:none}
+.feature-ui{background-size:cover;background-position:center;}
+.feature-media-scan{inset:12% 8%;border-color:rgba(141,232,255,.6);box-shadow:0 0 0 999px rgba(11,15,20,.025),0 0 35px rgba(36,168,255,.16)}
+
+/* Release charts sit in a dedicated glass control surface instead of competing with the photo. */
+.release-art .release-chart{width:min(58%,330px);height:168px;margin:0 0 18px auto;padding:30px 22px 18px;gap:9px;border-radius:2px;background:rgba(7,15,22,.9);border:1px solid rgba(141,232,255,.72);box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 0 1px rgba(36,168,255,.12),inset 0 0 34px rgba(36,168,255,.14);backdrop-filter:blur(12px)}
+.release-art .release-chart:before{content:'LIVE RELEASE SIGNAL';position:absolute;top:10px;left:18px;color:rgba(141,232,255,.8);font-size:8px;letter-spacing:.16em}
+.release-art .release-chart i{position:relative;z-index:1;border-radius:1px}
+.release-art.release-0 .release-chart i:nth-child(-n+4){background:linear-gradient(180deg,#b7f2ff,#24a8ff)}
+.release-art.release-2 .release-chart{width:min(64%,360px);}
+
+/* The impact strip behaves like a continuous information ticker while visible. */
+.impact-marquee{position:relative}
+.impact-grid{animation:impact-slide 34s linear infinite}
+.impact-grid:nth-child(2){animation-delay:-17s}
+
+/* Turn the three exploration links into editorial panels without changing the existing grid. */
+.explore-grid a{min-height:290px;padding:34px 32px;background:linear-gradient(155deg,#fff 0%,#f3f8fa 58%,#e5f2f6 100%);isolation:isolate}
+.explore-grid a:after{content:'';position:absolute;right:-36px;top:-42px;width:150px;height:150px;border:1px solid rgba(36,168,255,.2);border-radius:50%;box-shadow:0 0 0 22px rgba(36,168,255,.035),0 0 0 44px rgba(36,168,255,.025);transition:transform .7s ease,opacity .4s}
+.explore-grid a:nth-child(2):after{border-color:rgba(141,232,255,.38);transform:rotate(28deg)}
+.explore-grid a:nth-child(3):after{border-color:rgba(100,120,240,.28);transform:rotate(-18deg)}
+.explore-grid a:hover:after{transform:translate(-14px,14px) scale(1.12);opacity:.72}
+.explore-grid a span{color:var(--blue);font-size:11px;letter-spacing:.18em;font-weight:700}
+.explore-grid a h3{max-width:240px}
+.explore-grid a p{max-width:250px}
+@media(max-width:700px){.release-art .release-chart,.release-art.release-2 .release-chart{width:78%;height:124px;margin-bottom:14px;padding:24px 14px 12px}.explore-grid a{min-height:230px;padding:26px 24px}.feature-ui:before{background:linear-gradient(90deg,rgba(11,15,20,.26),rgba(11,15,20,.05) 62%,rgba(11,15,20,.22))}}
+
+/* Existing product language stays intact below these targeted composition rules. */
+.hero-visual{min-height:520px}
 .stage-detail{position:relative;display:flex;flex-direction:column;min-height:520px;overflow:hidden}
 .stage-detail > motion-div{position:relative;z-index:2}
 .stage-detail .stage-visual{flex:1;min-height:300px;margin-top:28px;border-radius:0;isolation:isolate;background-position:center;background-size:cover}
