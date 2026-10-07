@@ -9,8 +9,13 @@ const sans = Geist({ subsets: ['latin', 'latin-ext'], variable: '--font-sans', d
 const mono = Geist_Mono({ subsets: ['latin', 'latin-ext'], variable: '--font-mono', display: 'swap' })
 
 export const metadata: Metadata = {
-  title: 'MES Systems — Production intelligence, connected',
-  description: 'One connected MES platform for smarter, faster, and more transparent manufacturing.',
+  title: 'THLOne — Connecting intelligence. Connecting business.',
+  description: 'THLOne connects AI, people, business systems, operations and integration into one intelligent digital ecosystem.',
+  openGraph: {
+    title: 'THLOne — Connecting intelligence. Connecting business.',
+    description: 'One connected ecosystem for digital transformation, enterprise applications and smarter operations.',
+    type: 'website',
+  },
   generator: 'v0.app',
   icons: {
     icon: [
@@ -47,7 +52,7 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme={ACTIVE_THEME} className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
       <body className="antialiased">
-        <Script id="theme-preview" strategy="beforeInteractive">{`try{var t=new URLSearchParams(location.search).get("theme");if(${JSON.stringify(THEMES)}.indexOf(t)>-1)document.documentElement.setAttribute("data-theme",t)}catch(e){}`}</Script>
+        <Script id="theme-preview" strategy="beforeInteractive">{`try{var t=new URLSearchParams(location.search).get("theme");var saved=localStorage.getItem("thlone-theme");if(saved)document.documentElement.setAttribute("data-thlone-mode",saved);if(t&&${JSON.stringify(THEMES)}.indexOf(t)>-1)document.documentElement.setAttribute("data-theme",t)}catch(e){}`}</Script>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
